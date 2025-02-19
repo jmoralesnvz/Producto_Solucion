@@ -1,0 +1,84 @@
+﻿@page
+@model IndexModel
+
+@{
+    ViewData["Title"] = "Lista de Productos";
+}
+
+<div class="min-h-screen bg-gray-100 flex flex-col items-center py-10">
+    <div class="w-full max-w-5xl bg-white shadow-lg rounded-lg p-6">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">Lista de Productos</h2>
+
+        <div class="flex justify-between mb-4">
+           @*  <a asp-action="Create" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-all">
+                Agregar Nuevo Producto
+            </a> *@
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-blue-600 text-white">
+                        <th class="py-3 px-4 border border-gray-300">Nombre</th>
+                        <th class="py-3 px-4 border border-gray-300">Precio</th>
+                        <th class="py-3 px-4 border border-gray-300">Stock</th>
+                        <th class="py-3 px-4 border border-gray-300">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @ViewBag.Mensaje
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    // Eliminar un producto con AJAX
+    document.querySelectorAll(".delete-product").forEach(button => {
+        button.addEventListener("click", function () {
+            const productId = this.getAttribute("data-id");
+
+            fetch(`/api/Productos/${productId}`, { method: "DELETE" })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert("Error al eliminar el producto");
+                    }
+                });
+        });
+    });
+
+    // Cargar productos dinámicamente con AJAX
+    function loadProducts() {
+        fetch("/Index")
+            .then(response => response.json())
+            .then(data => {
+                let tableBody = document.querySelector("#productos-table tbody");
+                tableBody.innerHTML = "";
+                data.forEach(producto => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${producto.nombre}</td>
+                            <td>${producto.precio}</td>
+                            <td>${producto.cantidadEnStock}</td>
+                            <td>
+                                <a href="/Productos/Details/${producto.id}" class="text-blue-500">Ver</a>
+                                <a href="/Productos/Edit/${producto.id}" class="text-yellow-500">Editar</a>
+                                <button class="delete-product text-red-500" data-id="${producto.id}">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    // Llamar a la función para cargar productos
+    loadProducts();
+});
+
+</script>

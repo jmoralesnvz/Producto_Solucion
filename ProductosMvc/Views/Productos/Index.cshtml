@@ -1,0 +1,141 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Lista de Productos";
+}
+
+<div class="min-h-screen bg-gray-100 flex flex-col items-center py-12 px-6">
+    <div class="w-full max-w-6xl bg-white border-2 rounded-lg p-6">
+        <!-- Encabezado -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl text-gray-900">@ViewData["Title"]</h2>
+            <a href="/Productos/Create" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-md active:opacity-90 hover:bg-gray-900 transition-all flex items-center">
+                <i class="fa-solid fa-plus mr-2"></i> Agregar Producto
+            </a>
+        </div>
+
+        <!-- Buscador -->
+        <div class="mb-4 flex">
+            <input type="text" id="search" placeholder="Buscar por nombre y precio..." class="w-full px-3 py-1 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <button id="btnSearch" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fa-solid fa-search"></i>
+            </button>
+        </div>
+
+        <!-- Tabla de Productos -->
+        <div class="overflow-auto rounded-lg border border-gray-200 h-[500px]">
+            <table class="w-full table-fixed bg-white">
+                <thead class="bg-gray-50 text-gray-700 uppercase">
+                    <tr>
+                        <th class="py-3 px-4 text-sm text-left font-medium w-1/4">Nombre</th>
+                        <th class="py-3 px-4 text-sm text-left font-medium w-1/4">Descripción</th>
+                        <th class="py-3 px-4 text-sm text-left font-medium w-1/6">Precio</th>
+                        <th class="py-3 px-4 text-sm text-left font-medium w-1/6">Stock</th>
+                        <th class="py-3 px-4 text-sm text-center font-medium w-32">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="product-list" class="divide-y divide-gray-200">
+                    <!-- Aquí se cargarán los productos con AJAX -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        <div id="pagination" class="flex justify-center space-x-2 mt-4"></div>
+    </div>
+</div>
+
+<!-- Scripts de AJAX -->
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let currentPage = 1;
+            const itemsPerPage = 5;
+
+            // Función para obtener los productos con AJAX
+            function loadProducts(page = 1, searchQuery = "") {
+
+
+                searchQuery
+
+
+                $.ajax({
+                    url: "@Url.Action("IndexData", "Productos")",
+                    type: "GET",
+                    data: { page: page, search: searchQuery },
+                    success: function (response) {
+                        if (!response.success) {
+                            alert("Error al cargar los productos.");
+                            return;
+                        }
+
+                        $("#product-list").empty();
+                        $("#pagination").empty();
+
+                        if (response.products.length > 0) {
+                            response.products.forEach(producto => {
+                                $("#product-list").append(`
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="py-2 px-4 text-gray-900 text-xs truncate">${producto.nombre}</td>
+                                        <td class="py-2 px-4 text-gray-700 text-xs truncate">${producto.descripcion}</td>
+                                        <td class="py-2 px-4 text-gray-900 text-xs font-medium">$${producto.precio.toFixed(2)}</td>
+                                        <td class="py-2 px-4 text-gray-700 text-xs">${producto.cantidadEnStock}</td>
+                                        <td class="py-2 px-4 text-center w-32">
+                                            <a href="/Productos/Details/${producto.id}" class="text-blue-600 hover:text-blue-800 px-2">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                            <a href="/Productos/Edit/${producto.id}" class="text-gray-600 hover:text-gray-800 px-2">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+                                            <a href="/Productos/Delete/${producto.id}" class="text-red-600 hover:text-red-800 px-2">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                `);
+                            });
+
+                            // Generar la paginación correctamente
+                            for (let i = 1; i <= response.totalPages; i++) {
+                                let button = $("<button>")
+                                    .text(i)
+                                    .addClass("px-3 py-1 rounded hover:bg-blue-700 transition-all")
+                                    .toggleClass("bg-blue-600 text-white", i === page)
+                                    .toggleClass("bg-gray-200", i !== page)
+                                    .data("page", i); // Guardamos la página en data-page
+
+                                $("#pagination").append(button);
+                            }
+                        } else {
+                            $("#product-list").append(`
+                                <tr>
+                                    <td colspan="5" class="text-center text-gray-500 py-4">No hay productos disponibles</td>
+                                </tr>
+                            `);
+                        }
+                    },
+                    error: function () {
+                        alert("Error al cargar los productos.");
+                    }
+                });
+            }
+
+            // Evento para manejar la paginación dinámicamente
+            $(document).on("click", "#pagination button", function () {
+                let newPage = $(this).data("page");
+                let searchQuery = $("#search").val();
+                loadProducts(newPage, searchQuery);
+            });
+
+            // Evento de búsqueda
+            $("#btnSearch").on("click", function () {
+                let searchQuery = $("#search").val();
+                loadProducts(1, searchQuery);
+            });
+
+            // Cargar productos al inicio
+            loadProducts();
+        });
+    </script>
+}
+
+}

@@ -1,0 +1,128 @@
+﻿@model ProductosMvc.Models.Producto
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Editar Producto";
+}
+
+@if (Model == null)
+{
+    <div class="text-center text-red-500 font-bold text-lg mt-10">
+        <p>⚠️ Error: No se pudo cargar el producto.</p>
+    </div>
+    return;
+}
+
+<div class="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-4xl bg-white border-2 rounded-lg p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                <i class="fa-solid fa-pen-to-square text-blue-600 mr-2"></i> @ViewData["Title"]
+            </h2>
+
+            <a href="/Productos" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm rounded-lg hover:bg-gray-300 transition-all flex items-center">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Volver a la Lista
+            </a>
+        </div>
+
+        <!-- Mensajes de error y éxito -->
+        <div id="error-message" class="hidden bg-red-100 text-red-700 p-3 rounded-md mb-4 text-center"></div>
+        <div id="success-message" class="hidden bg-green-100 text-green-700 p-3 rounded-md mb-4 text-center"></div>
+
+        <!-- Formulario con AJAX -->
+        <form id="editProductForm" class="space-y-6">
+            @Html.AntiForgeryToken()
+
+            <!-- ID (Oculto) -->
+            <input type="hidden" asp-for="Id" />
+
+            <!-- Fecha de Creación (Oculto) -->
+            <input type="hidden" asp-for="FechaDeCreacion" />
+
+            <!-- Nombre -->
+            <div>
+                <label for="Nombre" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
+                <input asp-for="Nombre" id="Nombre" name="Nombre" value="@Model.Nombre" required minlength="3" maxlength="100"
+                       class="mt-1 block w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <span asp-validation-for="Nombre" class="text-red-500 text-sm"></span>
+            </div>
+
+            <!-- Descripción -->
+            <div>
+                <label for="Descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
+                <textarea asp-for="Descripcion" id="Descripcion" name="Descripcion" rows="3"
+                          class="mt-1 block w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">@Model.Descripcion</textarea>
+                <span asp-validation-for="Descripcion" class="text-red-500 text-sm"></span>
+            </div>
+
+            <!-- Precio -->
+            <div>
+                <label for="Precio" class="block text-sm font-medium text-gray-700">Precio ($)</label>
+                <input asp-for="Precio" id="Precio" name="Precio" type="number" step="0.01" value="@Model.Precio" required min="0.01"
+                       class="mt-1 block w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <span asp-validation-for="Precio" class="text-red-500 text-sm"></span>
+            </div>
+
+            <!-- Cantidad en Stock -->
+            <div>
+                <label for="CantidadEnStock" class="block text-sm font-medium text-gray-700">Cantidad en Stock</label>
+                <input asp-for="CantidadEnStock" id="CantidadEnStock" name="CantidadEnStock" value="@Model.CantidadEnStock" type="number" required min="0"
+                       class="mt-1 block w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <span asp-validation-for="CantidadEnStock" class="text-red-500 text-sm"></span>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex justify-end space-x-4">
+                <a href="/Productos" class="px-4 py-2 bg-gray-300 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-400 transition-all flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Cancelar
+                </a>
+
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all flex items-center">
+                    <i class="fa-solid fa-save mr-2"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts de Validación y AJAX -->
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function () {
+            $("#editProductForm").submit(function (e) {
+                e.preventDefault(); // Evita la recarga de la página
+
+                // Limpiar mensajes previos
+                $("#error-message").addClass("hidden").text("");
+                $("#success-message").addClass("hidden").text("");
+
+                // Serializar el formulario
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: "@Url.Action("Edit", "Productos")", // URL del controlador
+                    type: "POST",
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            $("#success-message").removeClass("hidden").text("Producto actualizado correctamente.");
+
+                            // Redirección al Index después de 1.5 segundos
+                            setTimeout(function () {
+                                window.location.href = "@Url.Action("Index", "Productos")";
+                            }, 1500);
+                        } else {
+                            $("#error-message").removeClass("hidden").text(response.message || "Ocurrió un error.");
+                        }
+                    },
+                    error: function () {
+                        $("#error-message").removeClass("hidden").text("Error al procesar la solicitud.");
+                    }
+                });
+            });
+        });
+    </script>
+}
